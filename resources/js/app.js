@@ -20,7 +20,6 @@ Vue.component(HasError.name, HasError)
 Vue.component(AlertError.name, AlertError)
 // End V-Form
 
-
 // Toast Sweat Alert
 window.Swal = swal
 const Toast = Swal.mixin({

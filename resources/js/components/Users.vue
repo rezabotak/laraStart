@@ -7,7 +7,7 @@
             <h3 class="card-title">Users Table</h3>
 
             <div class="card-tools">
-              <button class="btn btn-success" data-toggle="modal" data-target="#addNew">
+              <button class="btn btn-success" @click="newModal">
                 <i class="fas fa-user-plus"></i>
               </button>
             </div>
@@ -33,7 +33,7 @@
                   <td>{{ user.type | upText }}</td>
                   <td>{{ user.created_at | myDate }}</td>
                   <td>
-                    <a href="#">
+                    <a href="#" @click="editModal(user)">
                       <i class="fa fa-edit blue"></i>
                     </a>
                     <a href="#" @click="deleteUser(user.id)">
@@ -61,12 +61,13 @@
       <div class="modal-dialog modal-dialog-centered" role="document">
         <div class="modal-content">
           <div class="modal-header">
-            <h5 class="modal-title" id="addNewLabel">Add New</h5>
+            <h5 class="modal-title" v-show="!editmode" id="addNewLabel">Add New</h5>
+            <h5 class="modal-title" v-show="editmode" id="addNewLabel">Update User Info</h5>
             <button type="button" class="close" data-dismiss="modal" aria-label="Close">
               <span aria-hidden="true">&times;</span>
             </button>
           </div>
-          <form @submit.prevent="createUser">
+          <form @submit.prevent="!editmode ?  createUser(): updateUser()">
             <div class="modal-body">
               <div class="form-group">
                 <input
@@ -132,13 +133,19 @@
               </div>
             </div>
             <div class="modal-footer">
+              <button type="button" class="btn btn-danger" data-dismiss="modal">Close</button>
               <button
-                type="button"
-                class="btn btn-danger"
-                data-dismiss="modal"
-                @click="clearForm()"
-              >Close</button>
-              <button :disabled="form.busy" type="submit" class="btn btn-primary">Create</button>
+                :disabled="form.busy"
+                v-show="!editmode"
+                type="submit"
+                class="btn btn-primary"
+              >Create</button>
+              <button
+                :disabled="form.busy"
+                v-show="editmode"
+                type="submit"
+                class="btn btn-success"
+              >Update</button>
             </div>
           </form>
         </div>
@@ -151,8 +158,10 @@
 export default {
   data() {
     return {
+      editmode: false,
       users: {},
       form: new Form({
+        id: "",
         name: "",
         email: "",
         password: "",
@@ -163,9 +172,52 @@ export default {
     };
   },
   methods: {
-    clearForm() {
+    newModal() {
       this.form.clear();
       this.form.reset();
+      $("#addNew").modal("show");
+      this.editmode = false;
+    },
+    editModal(user) {
+      this.form.reset();
+      $("#addNew").modal("show");
+      this.form.fill(user);
+      this.editmode = true;
+    },
+    loadUser() {
+      axios.get("api/user").then(({ data }) => (this.users = data.data));
+    },
+    createUser() {
+      this.$Progress.start();
+      this.form
+        .post("api/user")
+        .then(() => {
+          this.$Progress.finish();
+          $("#addNew").modal("hide");
+          Fire.$emit("afterCreated");
+          Toast.fire({
+            icon: "success",
+            title: "Data successfully added"
+          });
+        })
+        .catch(() => this.$Progress.fail());
+    },
+    updateUser() {
+      this.$Progress.start();
+      this.form
+        .put(`api/user/${this.form.id}`)
+        .then(() => {
+          this.$Progress.finish();
+          $("#addNew").modal("hide");
+          Fire.$emit("afterCreated");
+          Toast.fire({
+            icon: "success",
+            title: "Data successfully updated"
+          });
+        })
+        .catch(() => {
+          this.$Progress.fail();
+        });
     },
     deleteUser(id) {
       Swal.fire({
@@ -189,25 +241,6 @@ export default {
             });
         }
       });
-    },
-    loadUser() {
-      axios.get("api/user").then(({ data }) => (this.users = data.data));
-    },
-    createUser() {
-      this.$Progress.start();
-      this.form.post("api/user").then(
-        res => {
-          this.$Progress.finish();
-          $("#addNew").modal("hide");
-          Fire.$emit("afterCreated");
-          Toast.fire({
-            icon: "success",
-            title: "Data successfully added"
-          });
-          clearForm();
-        },
-        err => this.$Progress.fail()
-      );
     }
   },
   created() {
