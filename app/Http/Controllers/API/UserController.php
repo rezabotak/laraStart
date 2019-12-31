@@ -34,7 +34,9 @@ class UserController extends Controller
         $this->validate($request, [
             'name' => 'required|string',
             'email' => 'required|string|email|unique:users',
-            'password' => 'required|string|min:6'
+            'password' => 'required|string|min:6',
+            'bio' => 'nullable',
+            'photo' => 'nullable'
         ]);
 
         return User::create([
@@ -71,7 +73,9 @@ class UserController extends Controller
         $this->validate($request, [
             'name' => 'required|string',
             'email' => 'required|string|email|unique:users,email,' . $user->id,
-            'password' => 'somitimes|string|min:6'
+            'password' => 'sometimes|string|min:6',
+            'bio' => 'nullable',
+            'photo' => 'nullable'
         ]);
         $user->update($request->all());
         return ["message" => "Updated"];
@@ -88,5 +92,45 @@ class UserController extends Controller
         $user = User::findOrFail($id);
         $user->delete();
         return ['message' => 'User Deleted'];
+    }
+
+    public function profile()
+    {
+        return auth('api')->user();
+    }
+
+    public function updateProfile(Request $request)
+    {
+        $user = auth('api')->user();
+
+        $this->validate($request, [
+            'name' => 'required|string',
+            'email' => 'required|string|email|unique:users,email,' . $user->id,
+            'password' => 'sometimes|string|min:6',
+            'bio' => 'nullable',
+            'photo' => 'nullable'
+        ]);
+
+        $currentPhoto = $user->photo;
+
+        if ($request->photo != $currentPhoto) {
+            $name = time() . '.' . explode('/', explode(':', substr($request->photo, 0, strpos($request->photo, ';')))[1])[1];
+
+            \Image::make($request->photo)->save(public_path('img/profile/' . $name));
+
+            $request->merge(['photo' => $name]);
+
+            $userPhoto = public_path('img/profile/' . $currentPhoto);
+            if (file_exists($userPhoto)) {
+                unlink($userPhoto);
+            }
+        }
+
+        if (!empty($request->password)) {
+            $request->merge(['password' => Hash::make($request->password)]);
+        }
+
+        $user->update($request->all());
+        return ['message' => 'success'];
     }
 }
