@@ -2118,6 +2118,7 @@ __webpack_require__.r(__webpack_exports__);
 //
 //
 //
+//
 /* harmony default export */ __webpack_exports__["default"] = ({
   data: function data() {
     return {
@@ -2171,7 +2172,11 @@ __webpack_require__.r(__webpack_exports__);
 
       this.$Progress.start();
       this.form.put("api/profile").then(function () {
-        _this2.form.password = "";
+        if (_this2.form.password === "") {
+          _this2.form.password = undefined;
+        }
+
+        _this2.form.password = undefined;
 
         _this2.$Progress.finish();
 
@@ -2179,7 +2184,10 @@ __webpack_require__.r(__webpack_exports__);
           icon: "success",
           title: "Data successfully updated"
         });
+        _this2.$refs.myFileInput.value = "";
       })["catch"](function () {
+        _this2.form.password = undefined;
+
         _this2.$Progress.fail();
       });
     }
@@ -61393,6 +61401,7 @@ var render = function() {
                       _vm._v(" "),
                       _c("div", { staticClass: "col-sm-10" }, [
                         _c("input", {
+                          ref: "myFileInput",
                           staticClass: "form-control-file",
                           attrs: { type: "file", name: "photo", id: "photo" },
                           on: { change: _vm.changePhotoProfile }

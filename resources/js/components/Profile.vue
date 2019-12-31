@@ -121,6 +121,7 @@
                         name="photo"
                         id="photo"
                         @change="changePhotoProfile"
+                        ref="myFileInput"
                       />
                     </div>
                   </div>
@@ -214,14 +215,19 @@ export default {
       this.form
         .put("api/profile")
         .then(() => {
-          this.form.password = "";
+          if (this.form.password === "") {
+            this.form.password = undefined;
+          }
+          this.form.password = undefined;
           this.$Progress.finish();
           Toast.fire({
             icon: "success",
             title: "Data successfully updated"
           });
+          this.$refs.myFileInput.value = "";
         })
         .catch(() => {
+          this.form.password = undefined;
           this.$Progress.fail();
         });
     }
