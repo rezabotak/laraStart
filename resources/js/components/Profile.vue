@@ -233,9 +233,6 @@ export default {
     }
   },
   mounted() {
-    console.log("Component mounted.");
-  },
-  created() {
     axios.get("api/profile").then(({ data }) => {
       this.form.photo = data.photo;
       this.form.fill(data);

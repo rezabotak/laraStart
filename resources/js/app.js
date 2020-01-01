@@ -13,12 +13,21 @@ import VueRouter from 'vue-router'
 import moment from 'moment'
 import VueProgressBar from 'vue-progressbar'
 import swal from 'sweetalert2'
+import Gate from './Gate'
 
 // V-Form
 window.Form = Form
 Vue.component(HasError.name, HasError)
 Vue.component(AlertError.name, AlertError)
 // End V-Form
+
+// Gate
+Vue.prototype.$gate = new Gate(window.user)
+// End Gate
+
+// Pagination
+Vue.component('pagination', require('laravel-vue-pagination'));
+// End Pagination
 
 // Toast Sweat Alert
 window.Swal = swal
@@ -104,6 +113,11 @@ Vue.component(
 Vue.component(
     'passport-personal-access-tokens',
     require('./components/passport/PersonalAccessTokens.vue').default
+);
+
+Vue.component(
+    'not-found',
+    require('./components/NotFound.vue').default
 );
 
 Vue.component('example-component', require('./components/ExampleComponent.vue').default);

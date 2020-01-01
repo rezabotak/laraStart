@@ -1,6 +1,6 @@
 <template>
   <div class="container mt-5">
-    <div class="row">
+    <div class="row" v-if="$gate.isAdminOrAuthor()">
       <div class="col-md-12">
         <div class="card">
           <div class="card-header">
@@ -26,7 +26,7 @@
                 </tr>
               </thead>
               <tbody>
-                <tr v-for="(user, index) in users" :key="user.id">
+                <tr v-for="(user, index) in users.data" :key="user.id">
                   <td>{{ index+1 }}</td>
                   <td>{{ user.name }}</td>
                   <td>{{ user.email }}</td>
@@ -45,10 +45,21 @@
             </table>
           </div>
           <!-- /.card-body -->
+          <div class="card-footer">
+            <pagination :data="users" @pagination-change-page="getResults">
+              <span slot="prev-nav">&lt; Previous</span>
+              <span slot="next-nav">Next &gt;</span>
+            </pagination>
+          </div>
         </div>
         <!-- /.card -->
       </div>
     </div>
+
+    <div v-if="!$gate.isAdminOrAuthor()">
+      <not-found></not-found>
+    </div>
+
     <!-- Modal -->
     <div
       class="modal fade"
@@ -172,6 +183,11 @@ export default {
     };
   },
   methods: {
+    getResults(page = 1) {
+      axios.get("api/user?page=" + page).then(response => {
+        this.users = response.data;
+      });
+    },
     newModal() {
       this.form.clear();
       this.form.reset();
@@ -185,7 +201,9 @@ export default {
       this.editmode = true;
     },
     loadUser() {
-      axios.get("api/user").then(({ data }) => (this.users = data.data));
+      if (this.$gate.isAdminOrAuthor()) {
+        axios.get("api/user").then(({ data }) => (this.users = data));
+      }
     },
     createUser() {
       this.$Progress.start();
@@ -243,7 +261,7 @@ export default {
       });
     }
   },
-  created() {
+  mounted() {
     this.loadUser();
     Fire.$on("afterCreated", () => this.loadUser());
   }
