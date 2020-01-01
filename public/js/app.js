@@ -2421,9 +2421,14 @@ __webpack_require__.r(__webpack_exports__);
       var _this = this;
 
       var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
-      axios.get("api/user?page=" + page).then(function (response) {
-        _this.users = response.data;
-      });
+
+      if (this.$parent.search === "") {
+        axios.get("api/user?page=" + page).then(function (response) {
+          _this.users = response.data;
+        });
+      } else {
+        Fire.$emit("searching", page);
+      }
     },
     newModal: function newModal() {
       this.form.clear();
@@ -2507,6 +2512,13 @@ __webpack_require__.r(__webpack_exports__);
   mounted: function mounted() {
     var _this6 = this;
 
+    Fire.$on("searching", function () {
+      var page = arguments.length > 0 && arguments[0] !== undefined ? arguments[0] : 1;
+      var query = _this6.$parent.search;
+      axios.get("api/findUser?q=" + query + "&page=" + page).then(function (res) {
+        _this6.users = res.data;
+      })["catch"](function () {});
+    });
     this.loadUser();
     Fire.$on("afterCreated", function () {
       return _this6.loadUser();
@@ -79435,7 +79447,15 @@ Vue.component('example-component', __webpack_require__(/*! ./components/ExampleC
 
 var app = new Vue({
   el: '#app',
-  router: router
+  router: router,
+  data: {
+    search: ''
+  },
+  methods: {
+    searchit: _.debounce(function () {
+      Fire.$emit('searching');
+    }, 1000)
+  }
 });
 
 /***/ }),

@@ -184,9 +184,13 @@ export default {
   },
   methods: {
     getResults(page = 1) {
-      axios.get("api/user?page=" + page).then(response => {
-        this.users = response.data;
-      });
+      if (this.$parent.search === "") {
+        axios.get("api/user?page=" + page).then(response => {
+          this.users = response.data;
+        });
+      } else {
+        Fire.$emit("searching", page);
+      }
     },
     newModal() {
       this.form.clear();
@@ -262,6 +266,15 @@ export default {
     }
   },
   mounted() {
+    Fire.$on("searching", (page = 1) => {
+      let query = this.$parent.search;
+      axios
+        .get("api/findUser?q=" + query + "&page=" + page)
+        .then(res => {
+          this.users = res.data;
+        })
+        .catch(() => {});
+    });
     this.loadUser();
     Fire.$on("afterCreated", () => this.loadUser());
   }
